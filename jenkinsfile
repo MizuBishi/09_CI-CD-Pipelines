@@ -1,39 +1,30 @@
 pipeline {
   agent any
+  tools {
+    maven 'Maven 3.6' 
+  }
   stages {
-    stage('One') {
+    stage('Checkout') {
       steps {
-        echo 'Hi, this is Zulaikha from edureka'
+        checkout scm sh 'mvn clean'
       }
     }
-    stage('Two') {
+    stage('Build') {
       steps {
-        input('Do you want to proceed?')
+        sh 'mvn package'
       }
     }
-    stage('Three') {
-      when {
-        not {
-            branch "master"
-        }
-      }
-    steps {
-      echo "Hello"
+    stage('Deploy') {
+      steps {
+        sh 'mkdir -p /var/jenkins_home/download'
+        sh 'cp ./target/*.jar /var/jenkins_home/download'
       }
     }
-    stage('Four') { 
-      parallel {
-        stage('Unit Test') { 
-          steps {
-            echo "Running the unit test..."
-          }
-        }
-        stage('Integration test') {
-          steps {
-            echo "Running the integration test..."
-          }
-        }
-      }
+  }
+  post {
+    always {
+      // publish test results
+      junit 'target/surefire-reports/*.xml'
     }
   }
 }
